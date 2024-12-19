@@ -33,28 +33,23 @@ If a resource was deleted in FOLIO, it's entry in the database also needs to be 
 
 ## Mapping
 Map LAS:eR properties of subscriptions/licenses that appear in locally stored resources to FOLIO properties.
-![properties](docs/properties_license.png){width=80%}
 
 Click on a property to map it to FOLIO.
 Input the internal name for the property in FOLIO (found in the settings app).
 There is three options for every property:
 - "Ignorieren"
 	- Skips the property during import
-![ignore](docs/ignore_property.png){width=75%}
 
 - "Text"
 	- The LAS:eR property has a text value and should be copied over into FOLIO
-![text](docs/text_property.png){width=75%}
 
 - "Auswahlliste"
 	- The LAS:eR property is a selection list
 	- Upon selecting this option a table is shown with the first column listing every value found for this property in the local data and the second column being for the corresponding internal name in FOLIO
-![selection list](docs/list_property.png){width=75%}
 
 ## Configuration
 Used to setup the credentials for both APIs and the path for exported resources.
 ❗ The user identified by "FOLIO User" and "FOLIO Passwort" is required to have the permissions needed to create new resources in FOLIO or else the import will not work correctly.
-![configuration](docs/config.png){width=90%}
 
 
 # Example data
