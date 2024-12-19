@@ -4,7 +4,8 @@
 # Running
 
 ## Prerequisites
-Ensure that PHP is installed (version 8.1 or later) and that the system used has network access to the LAS:eR and FOLIO APIs.
+Ensure that PHP is installed (version 8.1 or later) and the sqlite3 module is enabled. 
+Also ensure that the system used has network access to the LAS:eR and FOLIO APIs.
 
 ## Starting the application
 Clone this repository:
@@ -49,6 +50,7 @@ There is three options for every property:
 
 ## Configuration
 Used to setup the credentials for both APIs and the path for exported resources.
+
 ❗ The user identified by "FOLIO User" and "FOLIO Passwort" is required to have the permissions needed to create new resources in FOLIO or else the import will not work correctly.
 
 
