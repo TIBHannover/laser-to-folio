@@ -1,0 +1,30 @@
+<?php
+$splitName = explode("/", $_SERVER['SCRIPT_NAME']);
+$filename = end($splitName);
+$index = "";
+$porter = "";
+$mapper = "";
+$setup = "";
+
+switch ($filename) {
+  case 'index.php':
+    $index = 'class="active"';
+    break;
+  case 'porter.php':
+    $porter = 'class="active"';
+    break;
+  case 'mapper.php':
+    $mapper = 'class="active"';
+    break;
+  case 'setup.php':
+    $setup = 'class="active"';
+    break;
+}
+?>
+<head><title>LAS:eR 2 FOLIO</title></head>
+<div class="topnav">
+  <a <?php echo $index; ?> href="index.php">LAS:eR Abfrage</a>
+  <a <?php echo $porter; ?> href="porter.php">Import/Export</a>
+  <a <?php echo $mapper; ?> href="mapper.php">Eigenschaften Mapping</a>
+  <a <?php echo $setup; ?> href="setup.php">Konfiguration</a>
+</div>
