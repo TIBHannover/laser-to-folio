@@ -10,7 +10,7 @@ Also ensure that the system used has network access to the LAS:eR and FOLIO APIs
 ## Starting the application
 Clone this repository:
 ```
-git clone URL
+git clone https://github.com/TIBHannover/laser-to-folio.git
 ```
 Enter the cloned directory:
 ```
