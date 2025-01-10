@@ -57,9 +57,9 @@ if(isset($_POST['importSub'])){
   $subscriptions = "$SAVE_PATH\\subscriptionList";
 
   foreach(scandir($subscriptions) as $subscriptionDir){
-    if(!is_dir("$subscriptions\\$subscriptionDir")) continue;
+    if(!is_dir("$subscriptions/$subscriptionDir")) continue;
     if(in_array($subscriptionDir, array(".", ".."))) continue;
-    importResource("subscription", "$subscriptions\\$subscriptionDir");
+    importResource("subscription", "$subscriptions/$subscriptionDir");
   }
 
   print "<hr><div class=\"flex-container\">Daten importiert.</div>";
@@ -67,12 +67,12 @@ if(isset($_POST['importSub'])){
 
 if(isset($_POST['importLicense'])){
   $SAVE_PATH = $config['SAVE_PATH'];
-  $licenses = "$SAVE_PATH\\licenseList";
+  $licenses = "$SAVE_PATH/licenseList";
 
   foreach(scandir($licenses) as $licenseDir){
-    if(!is_dir("$licenses\\$licenseDir")) continue;
+    if(!is_dir("$licenses/$licenseDir")) continue;
     if(in_array($licenseDir, array(".", ".."))) continue;
-    importResource("license", "$licenses\\$licenseDir");
+    importResource("license", "$licenses/$licenseDir");
   }
 
   print "<hr><div class=\"flex-container\">Daten importiert.</div>";
@@ -81,19 +81,19 @@ if(isset($_POST['importLicense'])){
 
 if(isset($_POST['importAll'])){
   $SAVE_PATH = $config['SAVE_PATH'];
-  $licenses = "$SAVE_PATH\\licenseList";
-  $subscriptions = "$SAVE_PATH\\subscriptionList";
+  $licenses = "$SAVE_PATH/licenseList";
+  $subscriptions = "$SAVE_PATH/subscriptionList";
 
   foreach(scandir($licenses) as $licenseDir){
-    if(!is_dir("$licenses\\$licenseDir")) continue;
+    if(!is_dir("$licenses/$licenseDir")) continue;
     if(in_array($licenseDir, array(".", ".."))) continue;
-    importResource("license", "$licenses\\$licenseDir");
+    importResource("license", "$licenses/$licenseDir");
   }
 
   foreach(scandir($subscriptions) as $subscriptionDir){
-    if(!is_dir("$subscriptions\\$subscriptionDir")) continue;
+    if(!is_dir("$subscriptions/$subscriptionDir")) continue;
     if(in_array($subscriptionDir, array(".", ".."))) continue;
-    importResource("subscription", "$subscriptions\\$subscriptionDir");
+    importResource("subscription", "$subscriptions/$subscriptionDir");
   }
 
   print "<hr><div class=\"flex-container\">Daten importiert.</div>";

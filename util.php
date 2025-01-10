@@ -113,7 +113,7 @@ function callAPI($uid){
 function downloadDocument($path, $filename, $uuid){
   // FILES WITH SAME FILENAME CURRENTLY GET SKIPPED
   $time = getTimestamp();
-  if(is_file("$path\\$filename")){
+  if(is_file("$path/$filename")){
     error_log("[INFO $time] $filename already found locally, skipping download.\n", 3, "laser.log");
   }
   error_log("[INFO $time] Downloading $filename...\n", 3, "laser.log");
@@ -131,7 +131,7 @@ function downloadDocument($path, $filename, $uuid){
   }
   
   // Write contents of file to disk
-  $fh = fopen("$path\\$filename", "w");
+  $fh = fopen("$path/$filename", "w");
   fwrite($fh, $fileData);
   fclose($fh);
   $time = getTimestamp();
@@ -345,13 +345,13 @@ function checkDatabase($db, $key){
 // Retrieves either the subscriptionList or licenseList of given org and saves result at "$path/<subscriptionList|licenseList>"
 function retrieveList($path, $list){
   global $ORG_GUID;
-  if(!is_dir("$path\\$list")) mkdir("$path\\$list");
+  if(!is_dir("$path/$list")) mkdir("$path/$list");
 
   // To prevent cancellation of script
   set_time_limit(0);
   // If local file with lists exists load it, else create and fill it
-  if(is_file("$path\\$list\\localList.json")){
-    $metaList = json_decode(file_get_contents("$path\\$list\\localList.json"), true);
+  if(is_file("$path/$list/localList.json")){
+    $metaList = json_decode(file_get_contents("$path/$list/localList.json"), true);
   }else{
     $resp = laserRequest($list, array('q' => 'globalUID', 'v' => $ORG_GUID));
     $resp = json_decode($resp, true);
@@ -364,7 +364,7 @@ function retrieveList($path, $list){
       }
     }
     // Save list as file
-    $fh = fopen("$path\\$list\localList.json", "w");
+    $fh = fopen("$path/$list\localList.json", "w");
     fwrite($fh, json_encode($metaList));
     fclose($fh);
   }
@@ -373,16 +373,16 @@ function retrieveList($path, $list){
   foreach($metaList as $entry){
     // Extract part of globalUID after ":" to use as directory name
     $uid = explode(":", $entry['globalUID'])[1];
-    $entryDir = "$path\\$list\\$uid";
+    $entryDir = "$path/$list/$uid";
     if(!is_dir($entryDir)) mkdir($entryDir);
 
-    $entryJSON = getJsonData("$entryDir\\daten.json", $entry['globalUID']);
+    $entryJSON = getJsonData("$entryDir/daten.json", $entry['globalUID']);
 
     // Check for documents
     if(isset($entryJSON['documents'])){
       foreach($entryJSON['documents'] as $document){
         if(isset($document['type']) and $document['type'] == "Note") continue;
-        downloadDocument("$entryDir\\", $document['filename'], $document['uuid']);
+        downloadDocument("$entryDir/", $document['filename'], $document['uuid']);
       }
     }
   }
@@ -421,7 +421,7 @@ function importResource($type, $path){
   # $mysqli = @new mysqli("localhost", $DB_USER, $DB_PASS, $DB_NAME);
   $db = new SQLite3('laserfolio.sqlite', SQLITE3_OPEN_READWRITE);
 
-  $resource = json_decode(file_get_contents("$path\\daten.json"), true);
+  $resource = json_decode(file_get_contents("$path/daten.json"), true);
 
   // Resource is already in FOLIO, skip
   $folioID = checkDatabase($db, $resource['globalUID']);
@@ -598,7 +598,7 @@ function importResource($type, $path){
   foreach($dirContent as $file){
     if(in_array($file, array("daten.json", ".", ".."))) continue;
 
-    $response = uploadDocument("$path\\$file", $file, $type, $okapiToken);
+    $response = uploadDocument("$path/$file", $file, $type, $okapiToken);
     $fileFolioId = $response['id'];
 
     $documentList[] = array("name" => $file, "fileUpload" => array("id" => $fileFolioId));
