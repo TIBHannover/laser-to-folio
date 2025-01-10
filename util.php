@@ -10,9 +10,6 @@ if(is_file("config.json")){
   $FOLIO_USER = $config['FOLIO_USER'];
   $FOLIO_PASS = $config['FOLIO_PASS'];
   $FOLIO_TENANT = $config['FOLIO_TENANT'];
-  $DB_USER = $config['DB_USER'];
-  $DB_PASS = $config['DB_PASS'];
-  $DB_NAME = $config['DB_NAME'];
 }
 $API_URL="https://laser.hbz-nrw.de/api/v0/";
 
@@ -412,7 +409,7 @@ function uploadNote($title, $content, $type, $folioID, $okapiToken){
 
 // Uploads a resource to FOLIO
 function importResource($type, $path){
-  global $DB_USER, $DB_PASS, $DB_NAME, $SAVE_PATH, $status, $resourceMap;
+  global $SAVE_PATH, $status, $resourceMap;
   $time = getTimestamp();
   error_log("[INFO $time] Importing $type at $path\n", 3, "import.log");
   // Login and load resource
