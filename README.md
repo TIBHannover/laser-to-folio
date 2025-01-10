@@ -4,7 +4,7 @@
 # Running
 
 ## Prerequisites
-Ensure that PHP is installed (version 8.1 or later) and the sqlite3 module is enabled. 
+Ensure that PHP is installed (version 8.1 or later) and the sqlite3 and curl modules are installed and enabled in the php.ini. 
 Also ensure that the system used has network access to the LAS:eR and FOLIO APIs.
 
 ## Starting the application
