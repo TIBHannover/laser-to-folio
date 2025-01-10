@@ -361,7 +361,7 @@ function retrieveList($path, $list){
       }
     }
     // Save list as file
-    $fh = fopen("$path/$list\localList.json", "w");
+    $fh = fopen("$path/$list/localList.json", "w");
     fwrite($fh, json_encode($metaList));
     fclose($fh);
   }

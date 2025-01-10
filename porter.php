@@ -54,7 +54,7 @@ if(isset($_POST['exportAll'])){
 
 if(isset($_POST['importSub'])){
   $SAVE_PATH = $config['SAVE_PATH'];
-  $subscriptions = "$SAVE_PATH\\subscriptionList";
+  $subscriptions = "$SAVE_PATH/subscriptionList";
 
   foreach(scandir($subscriptions) as $subscriptionDir){
     if(!is_dir("$subscriptions/$subscriptionDir")) continue;
