@@ -25,6 +25,21 @@ if(!is_file("config.json")){
       tableDiv.style.display = "none";
     }
   }
+
+  // Checks if folioName is empty when propType is not "ignore", cancel saving if true
+  function checkInput() {
+    const selectedButton = document.querySelector('input[name="proptype"]:checked').value;
+    const folioName = document.querySelector('input[name="folioname"]').value;
+    if(selectedButton !== "ignore" && (!folioName || folioName.length === 0)){
+      console.log("No folioName set!");
+      const errorsDiv = document.getElementById("errors");
+      errorsDiv.innerText = "Interner Name in FOLIO darf nicht leer sein!";
+      errorsDiv.style.display = "block";
+      return false;
+    }
+    return true;
+  }
+
 </script>
 
 <?php
@@ -74,6 +89,7 @@ file_put_contents("mapping.json", json_encode($mapping));
 ?>
 
 <h1>Liste der Eigenschaften für <?php echo $type == "license" ? "Lizenzverträge" : "Vereinbarungen";?></h1>
+<div id="errors" style="display:none; color:red;"></div><br>
 <?php
 if(isset($_GET['prop'])){
 
@@ -158,7 +174,7 @@ if(isset($_GET['prop'])){
       </table>
     </div>
     <div class="row">
-      <input type="submit" name="save" value="Speichern">
+      <input type="submit" onclick="return checkInput()" name="save" value="Speichern">
     </div>
   </form>
 <?php }else{ ?>
