@@ -492,7 +492,7 @@ function importResource($type, $path){
         if(!isset($pred['calculatedType']) || $pred['calculatedType'] != "Local") continue;
         $predFolioId = checkDatabase($db, $pred['globalUID']);
         if(!$predFolioId) continue;
-        $data['inwardRelationships'][] = array("outward" => $predFolioId, "type" => "8aaa87f5889ad8f801889fed8326003e");
+        $data['inwardRelationships'][] = array("outward" => $predFolioId, "type" => "supersedes");
       }
     }
 
@@ -506,7 +506,7 @@ function importResource($type, $path){
         if(!isset($succ['calculatedType']) || $succ['calculatedType'] != "Local") continue;
         $succFolioId = checkDatabase($db, $succ['globalUID']);
         if(!$succFolioId) continue;
-        $data['outwardRelationships'][] = array("inward" => $succFolioId, "type" => "8aaa87f5889ad8f801889fed8326003e");
+        $data['outwardRelationships'][] = array("inward" => $succFolioId, "type" => "supersedes");
       }
     }
 
@@ -517,7 +517,7 @@ function importResource($type, $path){
         if(!isset($linkedSub['subscription']['calculatedType']) || $linkedSub['subscription']['calculatedType'] != 'Local') continue;
         $linkedSubFolioId = checkDatabase($db, $linkedSub['subscription']['globalUID']);
         if(!$linkedSubFolioId) continue;
-        $data['inwardRelationships'][] = array("outward" => $linkedSub, "type" => "8aaa87f5889ad8f801889fed832c0041");
+        $data['inwardRelationships'][] = array("outward" => $linkedSub, "type" => "related_to");
       }
     }
   }else{
