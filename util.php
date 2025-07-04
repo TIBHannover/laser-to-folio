@@ -177,6 +177,27 @@ function okapiLogin(){
   return $response['okapiToken'];
 }
 
+function checkAgreementName($name, $okapiToken){
+  $time = getTimestamp();
+  error_log("[INFO $time] Checking if '$name' is already in use.\n", 3, "import.log");
+  $curlHandler = curl_init("https://okapi.gbv.de/erm/validate/subscriptionAgreement/name");
+  curl_setopt($curlHandler, CURLOPT_RETURNTRANSFER, true);
+  $header = array("x-okapi-token: $okapiToken", "Content-type: application/json");
+  curl_setopt($curlHandler, CURLOPT_HTTPHEADER, $header);
+  curl_setopt($curlHandler, CURLOPT_POST, 1);
+  curl_setopt($curlHandler, CURLOPT_POSTFIELDS, json_encode(array("name" => $name)));
+  $response = curl_exec($curlHandler);
+  $return_code = curl_getinfo($curlHandler, CURLINFO_RESPONSE_CODE);
+  $time = getTimestamp();
+  if($return_code == 204){
+    error_log("[INFO $time] '$name' is not in use.\n", 3, "import.log");
+    return true;
+  }else{
+    error_log("[ERROR $time] '$name' already in use, appending 'DUPLICATE' suffix.\n", 3, "import.log");
+    return false;
+  }
+}
+
 
 // Sends a POST request to okAPI to create a new resource
 function uploadResource($resource, $type, $okapiToken){
@@ -607,6 +628,9 @@ function importResource($type, $path){
     $data['supplementaryDocs'] = $documentList;
   }
 
+  while($type == "subscription" && !checkAgreementName($data['name'], $okapiToken)){
+    $data['name'] .= " DUPLICATE";    //Easy to find but might look ridiculous if it happens more than once
+  }
 
   $folioResource = uploadResource($data, $type, $okapiToken);
   if(!isset($folioResource['id'])){
