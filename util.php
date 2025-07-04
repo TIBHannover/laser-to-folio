@@ -11,6 +11,7 @@ if(is_file("config.json")){
   $FOLIO_PASS = $config['FOLIO_PASS'];
   $FOLIO_TENANT = $config['FOLIO_TENANT'];
 }
+//LAS:eR API Base-URL
 $API_URL="https://laser.hbz-nrw.de/api/v0/";
 
 // Status mapping, can be changed to fit own needs
@@ -177,6 +178,7 @@ function okapiLogin(){
   return $response['okapiToken'];
 }
 
+// Call FOLIO API to check if $name is already used as agreement name
 function checkAgreementName($name, $okapiToken){
   $time = getTimestamp();
   error_log("[INFO $time] Checking if '$name' is already in use.\n", 3, "import.log");
@@ -422,7 +424,19 @@ function uploadNote($title, $content, $type, $folioID, $okapiToken){
   $note['content'] = "<p>$content</p>";
   $note['title'] = $title;
   $note['links'] = array(array("type" => $type, "id" => $folioID));
-  $note['typeId'] = "87721826-8bf5-4b1d-9f92-3070ff129085";
+
+  //get ID for first note type found
+  $curlHandlerNoteType = curl_init("https://okapi.gbv.de/note-types");
+  curl_setopt($curlHandlerNoteType, CURLOPT_RETURNTRANSFER, true);
+  $header = array("x-okapi-token: $okapiToken");
+  curl_setopt($curlHandlerNoteType, CURLOPT_HTTPHEADER, $header);
+  $response = json_decode(curl_exec($curlHandlerNoteType), true);
+  if(!isset($response['totalRecords']) || $response['totalRecords'] == 0){
+    return;
+  }else{
+    $note['typeId'] = $response['noteTypes'][0]['id'];
+  }
+
   curl_setopt($curlHandler, CURLOPT_POSTFIELDS, json_encode($note));
 
   $response = curl_exec($curlHandler);
