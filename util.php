@@ -90,7 +90,7 @@ function laserRequest($endpoint, $params){
 }
 
 
-// Call LAS:eR endpoint depending on the submitted globalUID
+// Call LAS:eR endpoint depending on the submitted laserID
 function callAPI($uid){
   $split = explode(":", $uid);
   if(count($split) == 1){
@@ -98,10 +98,10 @@ function callAPI($uid){
     return laserRequest("document", array('q' => 'uuid', 'v' => $uid));
   }else{
     if($split[0] == "org"){
-      // org globalUIDs are a special case, the endpoint is not called "org"
-      return laserRequest("organisation", array('q' => 'globalUID', 'v' => $uid));
+      // org laserIDs are a special case, the endpoint is not called "org"
+      return laserRequest("organisation", array('q' => 'laserID', 'v' => $uid));
     }else{
-      return laserRequest($split[0], array('q' => 'globalUID', 'v' => $uid));
+      return laserRequest($split[0], array('q' => 'laserID', 'v' => $uid));
     }
   }
 }
@@ -137,15 +137,15 @@ function downloadDocument($path, $filename, $uuid){
 }
 
 
-// Returns the data of object with globalUID as an associative array
-function getJsonData($path, $globalUID){
+// Returns the data of object with laserID as an associative array
+function getJsonData($path, $laserID){
   $time = getTimestamp();
   if(is_file($path)){
-    error_log("[INFO $time] JSON data found locally for $globalUID\n", 3, "laser.log");
+    error_log("[INFO $time] JSON data found locally for $laserID\n", 3, "laser.log");
     return json_decode(file_get_contents($path), true);
   }else{
-    error_log("[INFO $time] No local data found for $globalUID, calling API.\n", 3, "laser.log");
-    $data = callAPI($globalUID);
+    error_log("[INFO $time] No local data found for $laserID, calling API.\n", 3, "laser.log");
+    $data = callAPI($laserID);
     $fh = fopen($path, "w");
     fwrite($fh, $data);
     fclose($fh);
@@ -342,7 +342,7 @@ function uploadDocument($path, $filename, $type, $okapiToken){
 // Checks if key was already imported into FOLIO
 // Returns folioID if found, else returns false
 function checkDatabase($db, $key){
-  #$stmt = $mysqli->prepare("SELECT folioID FROM imported WHERE globalUID = ?");
+  #$stmt = $mysqli->prepare("SELECT folioID FROM imported WHERE laserID = ?");
   #$stmt->bind_param("s", $key);
   #$stmt->execute();
   #$result = $stmt->get_result();
@@ -373,7 +373,7 @@ function retrieveList($path, $list){
   if(is_file("$path/$list/localList.json")){
     $metaList = json_decode(file_get_contents("$path/$list/localList.json"), true);
   }else{
-    $resp = laserRequest($list, array('q' => 'globalUID', 'v' => $ORG_GUID));
+    $resp = laserRequest($list, array('q' => 'laserID', 'v' => $ORG_GUID));
     $resp = json_decode($resp, true);
 
     // Filter out any non-local resource
@@ -391,12 +391,13 @@ function retrieveList($path, $list){
 
   // Create directories for each local resource and save data inside
   foreach($metaList as $entry){
-    // Extract part of globalUID after ":" to use as directory name
-    $uid = explode(":", $entry['globalUID'])[1];
+    // Extract part of laserID after ":" to use as directory name
+    $entryID = $entry['globalUID'] ?? $entry['laserID'];
+    $uid = explode(":", $entryID)[1];
     $entryDir = "$path/$list/$uid";
     if(!is_dir($entryDir)) mkdir($entryDir);
 
-    $entryJSON = getJsonData("$entryDir/daten.json", $entry['globalUID']);
+    $entryJSON = getJsonData("$entryDir/daten.json", $entryID);
 
     // Check for documents
     if(isset($entryJSON['documents'])){
@@ -456,19 +457,20 @@ function importResource($type, $path){
   $resource = json_decode(file_get_contents("$path/daten.json"), true);
 
   // Resource is already in FOLIO, skip
-  $folioID = checkDatabase($db, $resource['globalUID']);
+  $resourceID = $resource['globalUID'] ?? $resource['laserID'];
+  $folioID = checkDatabase($db, $resourceID);
   if($folioID){
     $time = getTimestamp();
     error_log("[INFO $time] $type at $path is already imported. Skipping.\n", 3, "import.log");
     return $folioID;
   }
 
-  $laserGlobalUID = $resource['globalUID'];
+  $laserID = $resource['globalUID'] ?? $resource['laserID'];
   $additionalNotes = array();
   // Set data
   $data = array();
   $data['type'] = "local";
-  $data['description'] = "SKRIPTIMPORT\nLAS:eR ID: $laserGlobalUID";
+  $data['description'] = "SKRIPTIMPORT\nLAS:eR ID: $laserID";
   $startDate = $resource['startDate'] ?? "";
   $date = new DateTimeImmutable($startDate);
   $startYear = $date->format('Y');
@@ -492,7 +494,8 @@ function importResource($type, $path){
       // Only the first licence gets linked as current license, remainder will get notes
       $connectedCurrent = false;
       foreach($resource['licenses'] as $linkedLicense){
-        $licenseFolioId = checkDatabase($db, $linkedLicense['globalUID']);
+        $linkedLicenseID = $linkedLicense['globalUID'] ?? $linkedLicense['laserID'];
+        $licenseFolioId = checkDatabase($db, $linkedLicenseID);
 
         if(!$licenseFolioId) continue;
 
@@ -525,7 +528,8 @@ function importResource($type, $path){
 
       foreach($resource['predecessors'] as $pred){
         if(!isset($pred['calculatedType']) || $pred['calculatedType'] != "Local") continue;
-        $predFolioId = checkDatabase($db, $pred['globalUID']);
+        $predID = $pred['globalUID'] ?? $pred['laserID'];
+        $predFolioId = checkDatabase($db, $predID);
         if(!$predFolioId) continue;
         $data['inwardRelationships'][] = array("outward" => $predFolioId, "type" => "supersedes");
       }
@@ -539,7 +543,8 @@ function importResource($type, $path){
 
       foreach($resource['successors'] as $succ){
         if(!isset($succ['calculatedType']) || $succ['calculatedType'] != "Local") continue;
-        $succFolioId = checkDatabase($db, $succ['globalUID']);
+        $succID = $succ['globalUID'] ?? $succ['laserID'];
+        $succFolioId = checkDatabase($db, $succID);
         if(!$succFolioId) continue;
         $data['outwardRelationships'][] = array("inward" => $succFolioId, "type" => "supersedes");
       }
@@ -550,7 +555,8 @@ function importResource($type, $path){
     if(isset($resource['linkedSubscriptions'])){
       foreach($resource['linkedSubscriptions'] as $linkedSub){
         if(!isset($linkedSub['subscription']['calculatedType']) || $linkedSub['subscription']['calculatedType'] != 'Local') continue;
-        $linkedSubFolioId = checkDatabase($db, $linkedSub['subscription']['globalUID']);
+        $linkedSubID = $linkedSub['subscription']['globalUID'] ?? $linkedSub['subscription']['laserID'];
+        $linkedSubFolioId = checkDatabase($db, $linkedSubID);
         if(!$linkedSubFolioId) continue;
         $data['inwardRelationships'][] = array("outward" => $linkedSub, "type" => "related_to");
       }
@@ -681,7 +687,7 @@ function importResource($type, $path){
   #$mysqli->close();
   
   $stmt = $db->prepare("INSERT INTO 'imported' ('globalUID', 'folioID') VALUES (:uid, :fid)");
-  $stmt->bindValue(":uid", $resource['globalUID']);
+  $stmt->bindValue(":uid", $resource['globalUID'] ?? $resource['laserID']);
   $stmt->bindValue(":fid", $folioResource['id']);
   $stmt->execute();
   $db->close();
