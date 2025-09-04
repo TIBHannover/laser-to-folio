@@ -8,14 +8,14 @@
       }
    ],
    "openEnded": "Unknown",
-   "reference": "Testvertrag für LAS:eR 2 FOLIO",
+   "reference": "Testvertrag für LAS:eR 4.0 Update - laserID",
    "lastUpdated": "2024-09-10T08:36:17",
-   "globalUID": "license:11111111-1111-1111-1111-111111111111",
+   "laserID": "license:11111111-1111-1111-1111-111111111111",
    "dateCreated": "2024-09-10T07:38:43",
    "organisations": [{
       "organisation": {
          "sortname": "Hannover, TIB",
-         "globalUID": "org:2e43b291-22c0-4b4e-9c81-0a3216f00108",
+         "laserID": "org:2e43b291-22c0-4b4e-9c81-0a3216f00108",
          "identifiers": [
             {
                "namespace": "dbis_org_id",
@@ -103,7 +103,7 @@
    ],
    "providers": [{
       "sortname": "EBSCO",
-      "globalUID": "provider:a1f7c0ee-90fe-42c2-b677-be74d29410fb",
+      "laserID": "provider:a1f7c0ee-90fe-42c2-b677-be74d29410fb",
       "identifiers": [
          {
             "namespace": "dbpedia",
