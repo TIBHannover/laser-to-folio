@@ -14,10 +14,10 @@
    ],
    "kind": "Local Subscription",
    "lastUpdated": "2024-09-09T20:42:17",
-   "globalUID": "subscription:22222222-2222-2222-2222-222222222222",
+   "laserID": "subscription:22222222-2222-2222-2222-222222222222",
    "licenses": [{
-      "reference": "Testvertrag für LAS:eR 2 FOLIO",
-      "globalUID": "license:11111111-1111-1111-1111-111111111111",
+      "reference": "Testvertrag für LAS:eR 4.0 Update - laserID",
+      "laserID": "license:11111111-1111-1111-1111-111111111111",
       "calculatedType": "Local",
       "startDate": "2022-01-01T00:00:00",
       "status": "Current"
@@ -27,7 +27,7 @@
    "organisations": [{
       "organisation": {
          "sortname": "Hannover, TIB",
-         "globalUID": "org:2e43b291-22c0-4b4e-9c81-0a3216f00108",
+         "laserID": "org:2e43b291-22c0-4b4e-9c81-0a3216f00108",
          "identifiers": [
             {
                "namespace": "dbis_org_id",
@@ -82,13 +82,13 @@
       },
       "roleType": "Subscriber"
    }],
-   "name": "Testlizenz für LAS:eR 2 FOLIO",
+   "name": "Testlizenz für LAS:eR 4.0 Update - laserID",
    "hasPerpetualAccess": "Yes",
    "calculatedType": "Local",
    "orgAccessPoints": [],
    "vendors": [{
       "sortname": "EBSCO",
-      "globalUID": "vendor:e8f3f4ed-4fbf-4fbf-9fdc-eeea0da4672f",
+      "laserID": "vendor:e8f3f4ed-4fbf-4fbf-9fdc-eeea0da4672f",
       "name": "EBSCO Information Services GmbH",
       "gokbId": "e60c967b-b1d5-41ca-a0ab-8193682fc755",
       "status": "Current"
@@ -121,7 +121,7 @@
    ],
    "providers": [{
       "sortname": "EBSCO",
-      "globalUID": "provider:a1f7c0ee-90fe-42c2-b677-be74d29410fb",
+      "laserID": "provider:a1f7c0ee-90fe-42c2-b677-be74d29410fb",
       "identifiers": [
          {
             "namespace": "dbpedia",
