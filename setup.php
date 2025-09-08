@@ -92,7 +92,7 @@ if($configExists){
         </tr>
         <tr>
           <td class="col-6">
-            <label for="ORG_GUID">globalUID der Einrichtung</label>
+            <label for="ORG_GUID">laserID der Einrichtung</label>
           </td>
           <td class="col-6">
             <input class="col-12 config-text" placeholder="org:XXXXX" type="text" name="ORG_GUID" id="ORG_GUID" value="<?php echo htmlentities($ORG_GUID); ?>" size=36>
