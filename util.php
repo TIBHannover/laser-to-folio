@@ -363,30 +363,22 @@ function checkDatabase($db, $key){
 
 
 // Retrieves either the subscriptionList or licenseList of given org and saves result at "$path/<subscriptionList|licenseList>"
-function retrieveList($path, $list){
+function retrieveList($path, $list, $type){
   global $ORG_GUID;
-  if(!is_dir("$path/$list")) mkdir("$path/$list");
+  if(!is_dir("$path/$list/$type")) mkdir("$path/$list/$type", 0777, true);
 
   // To prevent cancellation of script
   set_time_limit(0);
   // If local file with lists exists load it, else create and fill it
-  if(is_file("$path/$list/localList.json")){
-    $metaList = json_decode(file_get_contents("$path/$list/localList.json"), true);
-  }else{
-    $resp = laserRequest($list, array('q' => 'laserID', 'v' => $ORG_GUID));
-    $resp = json_decode($resp, true);
+  $resp = laserRequest($list, array('q' => 'laserID', 'v' => $ORG_GUID));
+  $resp = json_decode($resp, true);
 
-    // Filter out any non-local resource
-    $metaList = array();
-    foreach($resp as $license){
-      if($license['calculatedType'] == "Local"){
-        $metaList[] = $license;
-      }
+  // Filter out any non-local resource
+  $metaList = array();
+  foreach($resp as $license){
+    if($license['calculatedType'] == $type){
+      $metaList[] = $license;
     }
-    // Save list as file
-    $fh = fopen("$path/$list/localList.json", "w");
-    fwrite($fh, json_encode($metaList));
-    fclose($fh);
   }
 
   // Create directories for each local resource and save data inside
@@ -394,7 +386,7 @@ function retrieveList($path, $list){
     // Extract part of laserID after ":" to use as directory name
     $entryID = $entry['globalUID'] ?? $entry['laserID'];
     $uid = explode(":", $entryID)[1];
-    $entryDir = "$path/$list/$uid";
+    $entryDir = "$path/$list/$type/$uid";
     if(!is_dir($entryDir)) mkdir($entryDir);
 
     $entryJSON = getJsonData("$entryDir/daten.json", $entryID);
@@ -408,7 +400,6 @@ function retrieveList($path, $list){
     }
   }
 }
-
 
 // Uploads a note and connects it to resource per folioID
 function uploadNote($title, $content, $type, $folioID, $okapiToken){

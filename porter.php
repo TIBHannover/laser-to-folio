@@ -15,8 +15,9 @@ if(!is_file("config.json")){
 
 <form method="POST">
   <div class="row">
+    <h2>Lokale einträge</h2>
     <div class="col-4">
-      <h2>LAS:eR Export (lokal Speichern)</h2>
+      <h2>LAS:eR Export</h2>
       <input type="submit" name="exportLicense" value="Verträge exportieren">
       <input type="submit" name="exportSub" value="Lizenzen exportieren">
       <input type="submit" name="exportAll" value="Komplettexport">
@@ -24,6 +25,20 @@ if(!is_file("config.json")){
     <div class="col-4">
       <h2>FOLIO Import</h2>
       <input type="submit" name="importAll" value="Import">
+    </div>
+  </div>
+  <hr>
+  <div class="row">
+    <h2>Konsortiallizenzen und Verträge</h2>
+    <div class="col-4">
+      <h2>LAS:eR Export</h2>
+      <input type="submit" name="exportLicensePart" value="Verträge exportieren">
+      <input type="submit" name="exportSubPart" value="Lizenzen exportieren">
+      <input type="submit" name="exportAllPart" value="Komplettexport">
+    </div>
+    <div class="col-4">
+      <h2>FOLIO Import</h2>
+      <input type="submit" name="importAllPart" value="Import">
     </div>
   </div>
 </form>
@@ -34,21 +49,42 @@ if(!is_file("config.json")){
 if(isset($_POST['exportSub'])){
   // Fetch list of local subscription
   $SAVE_PATH = $config['SAVE_PATH'];
-  retrieveList($SAVE_PATH, "subscriptionList");
+  retrieveList($SAVE_PATH, "subscriptionList", "Local");
   print "<hr><div class=\"flex-container\">Lizenzen exportiert.</div>";
 }
 
 if(isset($_POST['exportLicense'])){
   // Fetch list of local subscriptions
   $SAVE_PATH = $config['SAVE_PATH'];
-  retrieveList($SAVE_PATH, "licenseList");
+  retrieveList($SAVE_PATH, "licenseList", "Local");
   print "<hr><div class=\"flex-container\">Verträge exportiert.</div>";
 }
 
 if(isset($_POST['exportAll'])){
   $SAVE_PATH = $config['SAVE_PATH'];
-  retrieveList($SAVE_PATH, "licenseList");
-  retrieveList($SAVE_PATH, "subscriptionList");
+  retrieveList($SAVE_PATH, "licenseList", "Local");
+  retrieveList($SAVE_PATH, "subscriptionList", "Local");
+  print "<hr><div class=\"flex-container\">Verträge und Lizenzen exportiert.</div>";
+}
+
+if(isset($_POST['exportSubPart'])){
+  // Fetch list of local subscription
+  $SAVE_PATH = $config['SAVE_PATH'];
+  retrieveList($SAVE_PATH, "subscriptionList", "Participation");
+  print "<hr><div class=\"flex-container\">Lizenzen exportiert.</div>";
+}
+
+if(isset($_POST['exportLicensePart'])){
+  // Fetch list of local subscriptions
+  $SAVE_PATH = $config['SAVE_PATH'];
+  retrieveList($SAVE_PATH, "licenseList", "Participation");
+  print "<hr><div class=\"flex-container\">Verträge exportiert.</div>";
+}
+
+if(isset($_POST['exportAllPart'])){
+  $SAVE_PATH = $config['SAVE_PATH'];
+  retrieveList($SAVE_PATH, "licenseList", "Participation");
+  retrieveList($SAVE_PATH, "subscriptionList", "Participation");
   print "<hr><div class=\"flex-container\">Verträge und Lizenzen exportiert.</div>";
 }
 
