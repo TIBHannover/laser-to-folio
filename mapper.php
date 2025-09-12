@@ -44,29 +44,17 @@ if(!is_file("config.json")){
 
 <?php
 
-if(isset($_GET['type']) && $_GET['type'] == "subscription"){
-  $type = "subscription";
-  $propertyList = array();
-  if(is_dir($config['SAVE_PATH'] . "/subscriptionList")){
-    foreach(scandir($config['SAVE_PATH'] . "/subscriptionList") as $subscriptionDir){
-      if(!is_dir($config['SAVE_PATH'] . "/subscriptionList/$subscriptionDir") or in_array($subscriptionDir, array(".", ".."))) continue;
-      $subscription = json_decode(file_get_contents($config['SAVE_PATH'] . "/subscriptionList/$subscriptionDir/daten.json"), true);
-      if(isset($subscription['properties'])){
-        foreach($subscription['properties'] as $property){
-          if(!in_array($property['token'], $propertyList)) $propertyList[] = $property['token'];
-        }
-      }
-    }
-  }
-}else{
-  $type = "license";
-  $propertyList = array();
-  if(is_dir($config['SAVE_PATH'] . "/licenseList")){
-    foreach(scandir($config['SAVE_PATH'] . "/licenseList") as $licenseDir){
-      if(!is_dir($config['SAVE_PATH'] . "/licenseList/$licenseDir") or in_array($licenseDir, array(".", ".."))) continue;
-      $license = json_decode(file_get_contents($config['SAVE_PATH'] . "/licenseList/$licenseDir/daten.json"), true);
-      if(isset($license['properties'])){
-        foreach($license['properties'] as $property){
+$type = $_GET['type'] ?? "license";
+if(!in_array($type, array("license", "subscription"))) $type = "license";
+
+$propertyList = array();
+foreach(array("Local", "Participation") as $kind){
+  if(is_dir($config['SAVE_PATH'] . "/$type" . "List/$kind")){
+    foreach(scandir($config['SAVE_PATH'] . "/$type" . "List/$kind") as $resourceDir){
+      if(!is_dir($config['SAVE_PATH'] . "/$type" . "List/$kind/$resourceDir") or in_array($resourceDir, array(".", ".."))) continue;
+      $resource = json_decode(file_get_contents($config['SAVE_PATH'] . "/$type" . "List/$kind/$resourceDir/daten.json"), true);
+      if(isset($resource['properties'])){
+        foreach($resource['properties'] as $property){
           if(!in_array($property['token'], $propertyList)) $propertyList[] = $property['token'];
         }
       }
@@ -125,13 +113,16 @@ if(isset($_GET['prop'])){
   }
 
   $possibleValues = array();
-  foreach(scandir($config['SAVE_PATH'] . "/$type" . "List") as $resourceDir){
-    if(!is_dir($config['SAVE_PATH'] . "/$type" . "List/$resourceDir") or in_array($resourceDir, array(".", ".."))) continue;
-    $resource = json_decode(file_get_contents($config['SAVE_PATH'] . "/$type" . "List/$resourceDir/daten.json"), true);
-    if(isset($resource['properties'])){
-      foreach($resource['properties'] as $prop){
-        if($prop['token'] == $_GET['prop']){
-          if(isset($prop['value']) && !in_array($prop['value'], $possibleValues)) $possibleValues[] = $prop['value'];
+  foreach(array("Local", "Participation") as $kind){
+    if(!is_dir($config['SAVE_PATH'] . "/$type" . "List/$kind")) continue;
+    foreach(scandir($config['SAVE_PATH'] . "/$type" . "List/$kind") as $resourceDir){
+      if(!is_dir($config['SAVE_PATH'] . "/$type" . "List/$kind/$resourceDir") or in_array($resourceDir, array(".", ".."))) continue;
+      $resource = json_decode(file_get_contents($config['SAVE_PATH'] . "/$type" . "List/$kind/$resourceDir/daten.json"), true);
+      if(isset($resource['properties'])){
+        foreach($resource['properties'] as $prop){
+          if($prop['token'] == $_GET['prop']){
+            if(isset($prop['value']) && !in_array($prop['value'], $possibleValues)) $possibleValues[] = $prop['value'];
+          }
         }
       }
     }
