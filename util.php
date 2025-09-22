@@ -86,6 +86,7 @@ function laserRequest($endpoint, $params){
     error_log("[ERROR $time] Response code $status on endpoint \"$endpoint\"\n\n", 3, "laser.log");
   }
 
+  sleep(1); // Wait a second after every API-Call to not overload LAS:eR Servers with too many requests
   return $response;
 }
 
