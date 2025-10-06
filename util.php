@@ -88,7 +88,6 @@ function laserRequest($endpoint, $params){
   if($status != 200){
     writeToLog("laser.log", 1, "Response code $status returned on \"$API_URL$endpoint$params\"");
   }
-  //sleep(1); // Wait a second after every API-Call to not overload LAS:eR Servers with too many requests
   return $response;
 }
 
