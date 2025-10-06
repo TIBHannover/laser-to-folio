@@ -44,12 +44,17 @@ function getTimestamp(){
   return $date->format('Y-m-d H:i:s');
 }
 
+// Function to write to loggingfile
+function writeToLog($file, $level, $text){
+  $logLevel = array("INFO", "WARNING", "ERROR", "FATAL")[$level];
+  $time = getTimestamp();
+  error_log("[$logLevel $time] $text\n", 3, $file);
+}
 
 // Generates the HMAC Token for requests to LAS:eR
 function generateHmac($method, $path, $query_params){
   global $API_KEY, $API_PASS;
-  $time = getTimestamp();
-  error_log("[INFO $time] Generating HMAC for $path" . http_build_query($query_params) ."\n", 3, "laser.log");
+  writeToLog("laser.log", 0, "Generating HMAC for $path");
   $query = implode("&", $query_params);
   $message = $method . $path . $query;
   $hash = hash_hmac("sha256", $message, $API_PASS, false);
@@ -61,8 +66,7 @@ function generateHmac($method, $path, $query_params){
 function laserRequest($endpoint, $params){
   global $API_URL;
 
-  $time = getTimestamp();
-  error_log("[INFO $time] Calling LAS:eR API at \"$endpoint\" with params: " . http_build_query($params) . "\n", 3, "laser.log");
+  writeToLog("laser.log", 0, "Calling LAS:eR API at \"$endpoint\" with params: " . http_build_query($params));
   $token = generateHmac("GET", "/api/v0/$endpoint", array("q=" . $params['q'], "v=" . $params['v']));
   $params = "?q=" . urlencode($params['q']) . "&v=" . urlencode($params['v']);
   $curlHandler = curl_init($API_URL . $endpoint . $params);
@@ -82,11 +86,9 @@ function laserRequest($endpoint, $params){
   $response = curl_exec($curlHandler);
   $status = curl_getinfo($curlHandler, CURLINFO_HTTP_CODE);
   if($status != 200){
-    $time = getTimestamp();
-    error_log("[ERROR $time] Response code $status on endpoint \"$endpoint\"\n\n", 3, "laser.log");
+    writeToLog("laser.log", 1, "Response code $status returned on \"$API_URL$endpoint$params\"");
   }
-
-  sleep(1); // Wait a second after every API-Call to not overload LAS:eR Servers with too many requests
+  //sleep(1); // Wait a second after every API-Call to not overload LAS:eR Servers with too many requests
   return $response;
 }
 
@@ -95,8 +97,8 @@ function laserRequest($endpoint, $params){
 function callAPI($uid){
   $split = explode(":", $uid);
   if(count($split) == 1){
-    // uuid of a document
-    return laserRequest("document", array('q' => 'uuid', 'v' => $uid));
+    // laserID of a document
+    return laserRequest("document", array('q' => 'laserID', 'v' => $uid));
   }else{
     if($split[0] == "org"){
       // org laserIDs are a special case, the endpoint is not called "org"
@@ -109,22 +111,21 @@ function callAPI($uid){
 
 
 // Download a file from LAS:eR if it does not yet exist
-function downloadDocument($path, $filename, $uuid){
+function downloadDocument($path, $filename, $laserID){
   // FILES WITH SAME FILENAME CURRENTLY GET SKIPPED
-  $time = getTimestamp();
   if(is_file("$path/$filename")){
-    error_log("[INFO $time] $filename already found locally, skipping download.\n", 3, "laser.log");
+    writeToLog("laser.log", 0, "$filename already found locally, skipping download.");
+    return;
   }
-  error_log("[INFO $time] Downloading $filename...\n", 3, "laser.log");
+  writeToLog("laser.log", 0, "Downloading $filename");
   
   // Make a request to download the file
-  $fileData = callAPI($uuid);
+  $fileData = callAPI($laserID);
   // Check if no file was found
   $decodedData = json_decode($fileData, true);
   if(isset($decodedData)){
     if(isset($decodedData['status']) && $decodedData['status'] == 404){
-      $time = getTimestamp();
-      error_log("[WARNING $time] File $filename was not found in LAS:eR (returned 404)\n", 3, "laser.log");
+      writeToLog("laser.log", 1, "File $filename was not found in LAS:eR (404)");
       return;
     }
   }
@@ -133,19 +134,17 @@ function downloadDocument($path, $filename, $uuid){
   $fh = fopen("$path/$filename", "w");
   fwrite($fh, $fileData);
   fclose($fh);
-  $time = getTimestamp();
-  error_log("[INFO $time] $filename saved on disk.\n", 3, "laser.log");
+  writeToLog("laser.log", 0, "$filename saved on disk.");
 }
 
 
 // Returns the data of object with laserID as an associative array
 function getJsonData($path, $laserID){
-  $time = getTimestamp();
   if(is_file($path)){
-    error_log("[INFO $time] JSON data found locally for $laserID\n", 3, "laser.log");
+    writeToLog("laser.log", 0, "JSON data found locally for $laserID");
     return json_decode(file_get_contents($path), true);
   }else{
-    error_log("[INFO $time] No local data found for $laserID, calling API.\n", 3, "laser.log");
+    writeToLog("laser.log", 0, "No local data found for $laserID, calling API");
     $data = callAPI($laserID);
     $fh = fopen($path, "w");
     fwrite($fh, $data);
@@ -158,8 +157,7 @@ function getJsonData($path, $laserID){
 // Log into okAPI to recieve Auth token
 function okapiLogin(){
   global $FOLIO_PASS, $FOLIO_TENANT, $FOLIO_USER;
-  $time = getTimestamp();
-  error_log("[INFO $time] Logging into okapi..\n", 3, "import.log");
+  writeToLog("import.log", 0, "Logging into okapi..");
   $curlHandler = curl_init("https://okapi.gbv.de/authn/login");
   curl_setopt($curlHandler, CURLOPT_RETURNTRANSFER, true);
   $header = array("x-okapi-tenant: $FOLIO_TENANT", "Content-type: application/json");
@@ -171,8 +169,7 @@ function okapiLogin(){
   $response = json_decode(curl_exec($curlHandler), true);
   $token = $response['okapiToken'] ?? null;
   if($token == null){
-    $time = getTimestamp();
-    error_log("[FATAL $time] Did not recieve okapi Token after login. Dumping response and aborting.\n\n", 3, "import.log");
+    writeToLog("import.log", 3, "Did not recieve okapi Token after login. Dumping response and aborting.");
     print "Failed at okapiLogin<br>";
     exit;
   }
@@ -181,8 +178,7 @@ function okapiLogin(){
 
 // Call FOLIO API to check if $name is already used as agreement name
 function checkAgreementName($name, $okapiToken){
-  $time = getTimestamp();
-  error_log("[INFO $time] Checking if '$name' is already in use.\n", 3, "import.log");
+  writeToLog("import.log", 0, "Checking if '$name' is already in use.");
   $curlHandler = curl_init("https://okapi.gbv.de/erm/validate/subscriptionAgreement/name");
   curl_setopt($curlHandler, CURLOPT_RETURNTRANSFER, true);
   $header = array("x-okapi-token: $okapiToken", "Content-type: application/json");
@@ -191,12 +187,11 @@ function checkAgreementName($name, $okapiToken){
   curl_setopt($curlHandler, CURLOPT_POSTFIELDS, json_encode(array("name" => $name)));
   $response = curl_exec($curlHandler);
   $return_code = curl_getinfo($curlHandler, CURLINFO_RESPONSE_CODE);
-  $time = getTimestamp();
   if($return_code == 204){
-    error_log("[INFO $time] '$name' is not in use.\n", 3, "import.log");
+    writeToLog("import.log", 0, "'$name' is not in use.");
     return true;
   }else{
-    error_log("[ERROR $time] '$name' already in use, appending 'DUPLICATE' suffix.\n", 3, "import.log");
+    writeToLog("import.log", 0, "'$name' already in use, appending 'DUPLICATE' suffix.");
     return false;
   }
 }
@@ -204,8 +199,7 @@ function checkAgreementName($name, $okapiToken){
 
 // Sends a POST request to okAPI to create a new resource
 function uploadResource($resource, $type, $okapiToken){
-  $time = getTimestamp();
-  error_log("[INFO $time] Uploading $type\n", 3, "import.log");
+  writeToLog("import.log", 0, "Uploading $type");
   switch ($type) {
     case 'license':
       $curlHandler = curl_init("https://okapi.gbv.de/licenses/licenses");
@@ -214,8 +208,7 @@ function uploadResource($resource, $type, $okapiToken){
       $curlHandler = curl_init("https://okapi.gbv.de/erm/sas");
       break;
     default:
-      $time = getTimestamp();
-      error_log("[FATAL $time] Unknown type $type.\n", 3, "import.log");
+      writeToLog("import.log", 3, "Unknown type $type.");
       exit;
   }
 
@@ -227,8 +220,7 @@ function uploadResource($resource, $type, $okapiToken){
 
   $response = json_decode(curl_exec($curlHandler), true);
   if(!isset($response['id'])){
-    $time = getTimestamp();
-    error_log("[FATAL $time] Could not recieve folioID for resource\n", 3, "import.log");
+    writeToLog("import.log", 3, "Could not reviece folioID for resource");
     print "Failed at uploadResource<br>";
     print(json_encode($resource));
     print "<br>";
@@ -305,8 +297,7 @@ function uploadDocument($path, $filename, $type, $okapiToken){
       $curlHandler = curl_init("https://okapi.gbv.de/erm/files");
       break;
     default:
-      $time = getTimestamp();
-      error_log("[FATAL $time] Unknown document endpoint for \"$type\"\n", 3, "import.log");
+      writeToLog("import.log", 3, "Unknown document endpoint for '$type'");
       exit;
   }
   $splitFilename = explode(".", $filename);
@@ -329,8 +320,7 @@ function uploadDocument($path, $filename, $type, $okapiToken){
   $response = curl_exec($curlHandler);
   $responseJSON = json_decode($response, true);
   if(!isset($responseJSON['id'])){
-    $time = getTimestamp();
-    error_log("[FATAL $time] Could not recieve folioID for document.\n", 3, "import.log");
+    writeToLog("import.log", 3, "Could not recieve folioID for document.");
     print "Failed at uploadDocument<br>";
     var_dump($response);
     exit;
@@ -396,7 +386,7 @@ function retrieveList($path, $list, $type){
     if(isset($entryJSON['documents'])){
       foreach($entryJSON['documents'] as $document){
         if(isset($document['type']) and $document['type'] == "Note") continue;
-        downloadDocument("$entryDir/", $document['filename'], $document['uuid']);
+        downloadDocument("$entryDir/", $document['filename'], $document['laserID']);
       }
     }
   }
@@ -404,8 +394,7 @@ function retrieveList($path, $list, $type){
 
 // Uploads a note and connects it to resource per folioID
 function uploadNote($title, $content, $type, $folioID, $okapiToken){
-  $time = getTimestamp();
-  error_log("[INFO $time] Uploading note \"$title\" to $folioID\n", 3, "import.log");
+  writeToLog("import.log", 0, "Uploading note '$title' to $folioID");
   if($type == "subscription") $type = "agreement";
   $curlHandler = curl_init("https://okapi.gbv.de/notes");
   curl_setopt($curlHandler, CURLOPT_RETURNTRANSFER, true);
@@ -438,8 +427,7 @@ function uploadNote($title, $content, $type, $folioID, $okapiToken){
 // Uploads a resource to FOLIO
 function importResource($type, $path){
   global $SAVE_PATH, $status, $resourceMap;
-  $time = getTimestamp();
-  error_log("[INFO $time] Importing $type at $path\n", 3, "import.log");
+  writeToLog("import.log", 0, "Importing '$type' at '$path'");
   // Login and load resource
   $okapiToken = okapiLogin();
 
@@ -452,8 +440,7 @@ function importResource($type, $path){
   $resourceID = $resource['globalUID'] ?? $resource['laserID'];
   $folioID = checkDatabase($db, $resourceID);
   if($folioID){
-    $time = getTimestamp();
-    error_log("[INFO $time] $type at $path is already imported. Skipping.\n", 3, "import.log");
+    writeToLog("import.log", 0, "'$type' at '$path' is already imported. Skipping.");
     return $folioID;
   }
 
@@ -512,11 +499,8 @@ function importResource($type, $path){
     // Link subscriptions
     $data['inwardRelationships'] = array();
     $data['outwardRelationships'] = array();
-    $time = getTimestamp();
-    error_log("[INFO $time] Checking for predecessors\n", 3, "import.log");
+    writeToLog("import.log", 0, "Checking for predecessors");
     if(isset($resource['predecessors'])){
-      $time = getTimestamp();
-      error_log("[INFO $time] List is set\n", 3, "import.log");
 
       foreach($resource['predecessors'] as $pred){
         if(!isset($pred['calculatedType']) || $pred['calculatedType'] != "Local") continue;
@@ -527,11 +511,8 @@ function importResource($type, $path){
       }
     }
 
-    $time = getTimestamp();
-    error_log("[INFO $time] Checking for successors\n", 3, "import.log");
+    writeToLog("import.log", 0, "Checking for successors");
     if(isset($resource['successors'])){
-      $time = getTimestamp();
-      error_log("[INFO $time] List is set\n", 3, "import.log");
 
       foreach($resource['successors'] as $succ){
         if(!isset($succ['calculatedType']) || $succ['calculatedType'] != "Local") continue;
@@ -542,8 +523,7 @@ function importResource($type, $path){
       }
     }
 
-    $time = getTimestamp();
-    error_log("[INFO $time] Checking for linked subscriptions\n", 3, "import.log");
+    writeToLog("import.log", 0, "Checking for linked subscriptions");
     if(isset($resource['linkedSubscriptions'])){
       foreach($resource['linkedSubscriptions'] as $linkedSub){
         if(!isset($linkedSub['subscription']['calculatedType']) || $linkedSub['subscription']['calculatedType'] != 'Local') continue;
@@ -646,8 +626,7 @@ function importResource($type, $path){
 
   $folioResource = uploadResource($data, $type, $okapiToken);
   if(!isset($folioResource['id'])){
-    $time = getTimestamp();
-    error_log("[ERROR $time] Did not recieve folioID for $type at $path\n", 3, "import.log");
+    writeToLog("import.log", 3, "Did not recieve folioID for '$type' at '$path'");
     print "Failed at importResource<br>";
     var_dump($folioResource);
     var_dump($data);
