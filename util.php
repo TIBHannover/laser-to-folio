@@ -157,22 +157,30 @@ function getJsonData($path, $laserID){
 function okapiLogin(){
   global $FOLIO_PASS, $FOLIO_TENANT, $FOLIO_USER;
   writeToLog("import.log", 0, "Logging into okapi..");
-  $curlHandler = curl_init("https://okapi.gbv.de/authn/login");
+  $curlHandler = curl_init("https://okapi.gbv.de/authn/login-with-expiry");
   curl_setopt($curlHandler, CURLOPT_RETURNTRANSFER, true);
   $header = array("x-okapi-tenant: $FOLIO_TENANT", "Content-type: application/json");
   curl_setopt($curlHandler, CURLOPT_HTTPHEADER, $header);
-  curl_setopt($curlHandler, CURLOPT_POST, 1);
+  curl_setopt($curlHandler, CURLOPT_POST, true);
+  curl_setopt($curlHandler, CURLOPT_HEADER, true);
   $data = array("username" => $FOLIO_USER, "password" => $FOLIO_PASS);
   curl_setopt($curlHandler, CURLOPT_POSTFIELDS, json_encode($data));
 
-  $response = json_decode(curl_exec($curlHandler), true);
-  $token = $response['okapiToken'] ?? null;
-  if($token == null){
+  $response = curl_exec($curlHandler);
+  preg_match_all('/Set-Cookie:\s*([^\n]*)/i', $response, $matches);
+  $cookies = array();
+  foreach($matches[1] as $rawcookie){
+    parse_str($rawcookie, $cookie);
+    $cookies = array_merge($cookies, $cookie);
+  }
+  $accessToken = $cookies['folioAccessToken'] ?? null;
+  if($accessToken == null){
     writeToLog("import.log", 3, "Did not recieve okapi Token after login. Dumping response and aborting.");
     print "Failed at okapiLogin<br>";
     exit;
   }
-  return $response['okapiToken'];
+
+  return $cookies;
 }
 
 // Call FOLIO API to check if $name is already used as agreement name
@@ -180,7 +188,10 @@ function checkAgreementName($name, $okapiToken){
   writeToLog("import.log", 0, "Checking if '$name' is already in use.");
   $curlHandler = curl_init("https://okapi.gbv.de/erm/validate/subscriptionAgreement/name");
   curl_setopt($curlHandler, CURLOPT_RETURNTRANSFER, true);
-  $header = array("x-okapi-token: $okapiToken", "Content-type: application/json");
+  $header = array("Content-type: application/json");
+  foreach($okapiToken as $k => $v){
+    $header[] = "Cookie: $k=$v";
+  }
   curl_setopt($curlHandler, CURLOPT_HTTPHEADER, $header);
   curl_setopt($curlHandler, CURLOPT_POST, 1);
   curl_setopt($curlHandler, CURLOPT_POSTFIELDS, json_encode(array("name" => $name)));
@@ -212,7 +223,10 @@ function uploadResource($resource, $type, $okapiToken){
   }
 
   curl_setopt($curlHandler, CURLOPT_RETURNTRANSFER, true);
-  $header = array("x-okapi-token: $okapiToken", "Content-type: application/json");
+  $header = array("Content-type: application/json");
+  foreach($okapiToken as $k => $v){
+    $header[] = "Cookie: $k=$v";
+  }
   curl_setopt($curlHandler, CURLOPT_HTTPHEADER, $header);
   curl_setopt($curlHandler, CURLOPT_POST, 1);
   curl_setopt($curlHandler, CURLOPT_POSTFIELDS, json_encode($resource));
@@ -278,7 +292,6 @@ function generateRandomString($length){
 
 // Uploads a document to FOLIO and returns the folioID
 function uploadDocument($path, $filename, $type, $okapiToken){
-  //$okapiToken = okapiLogin();
   $documentContentType = array(
     "PDF" => "application/pdf",
     "pdf" => "application/pdf",
@@ -312,7 +325,10 @@ function uploadDocument($path, $filename, $type, $okapiToken){
   $rawData .= "\r\n";
   $rawData .= "--$boundary--";
 
-  $header = array("x-okapi-token: $okapiToken", "Content-type: multipart/form-data; boundary=$boundary");
+  $header = array("Content-type: multipart/form-data; boundary=$boundary");
+  foreach($okapiToken as $k => $v){
+    $header[] = "Cookie: $k=$v";
+  }
   curl_setopt($curlHandler, CURLOPT_HTTPHEADER, $header);
 
   curl_setopt($curlHandler, CURLOPT_POSTFIELDS, $rawData);
@@ -397,7 +413,10 @@ function uploadNote($title, $content, $type, $folioID, $okapiToken){
   if($type == "subscription") $type = "agreement";
   $curlHandler = curl_init("https://okapi.gbv.de/notes");
   curl_setopt($curlHandler, CURLOPT_RETURNTRANSFER, true);
-  $header = array("x-okapi-token: $okapiToken", "Content-type: application/json");
+  $header = array("Content-type: application/json");
+  foreach($okapiToken as $k => $v){
+    $header[] = "Cookie: $k=$v";
+  }
   curl_setopt($curlHandler, CURLOPT_HTTPHEADER, $header);
   curl_setopt($curlHandler, CURLOPT_POST, 1);
   $note = array();
@@ -409,7 +428,10 @@ function uploadNote($title, $content, $type, $folioID, $okapiToken){
   //get ID for first note type found
   $curlHandlerNoteType = curl_init("https://okapi.gbv.de/note-types");
   curl_setopt($curlHandlerNoteType, CURLOPT_RETURNTRANSFER, true);
-  $header = array("x-okapi-token: $okapiToken");
+  $header = array();
+  foreach($okapiToken as $k => $v){
+    $header[] = "Cookie: $k=$v";
+  }
   curl_setopt($curlHandlerNoteType, CURLOPT_HTTPHEADER, $header);
   $response = json_decode(curl_exec($curlHandlerNoteType), true);
   if(!isset($response['totalRecords']) || $response['totalRecords'] == 0){
