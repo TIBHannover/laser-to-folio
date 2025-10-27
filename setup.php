@@ -17,6 +17,11 @@ if(isset($_POST['save'])){
   // Save configuration to file
   $config = $_POST;
   unset($config['save']);
+  if(isset($config['OKAPI_URL'])){
+    if(str_ends_with($config['OKAPI_URL'], "/")){
+      $config['OKAPI_URL'] = substr($config['OKAPI_URL'], 0, -1);
+    }
+  }
   file_put_contents("config.json", json_encode($config));
   
   #$mysqli = new mysqli("localhost", $_POST['DB_USER'], $_POST['DB_PASS'], $_POST['DB_NAME']);
@@ -37,6 +42,7 @@ $SAVE_PATH = "";
 $FOLIO_USER = "";
 $FOLIO_PASS = "";
 $FOLIO_TENANT = "";
+$OKAPI_URL = "";
 
 if($configExists){
   $config = json_decode(file_get_contents("config.json"), true);
@@ -48,9 +54,10 @@ if($configExists){
   $FOLIO_USER = $config['FOLIO_USER'] ?? "";
   $FOLIO_PASS = $config['FOLIO_PASS'] ?? "";
   $FOLIO_TENANT = $config['FOLIO_TENANT'] ?? "";
+  $OKAPI_URL = $config['OKAPI_URL'] ?? "";
 
   // Check if any entry is empty
-  if(empty($API_KEY) || empty($API_PASS) || empty($API_ISIL) || empty($ORG_GUID) || empty($SAVE_PATH) || empty($FOLIO_USER) || empty($FOLIO_PASS) || empty($FOLIO_TENANT)) {
+  if(empty($API_KEY) || empty($API_PASS) || empty($API_ISIL) || empty($ORG_GUID) || empty($SAVE_PATH) || empty($FOLIO_USER) || empty($FOLIO_PASS) || empty($FOLIO_TENANT) || empty($OKAPI_URL)) {
     print '<strong style="color: red">Konfiguration unvollständig!</strong>';
   }
 }else{
@@ -131,6 +138,14 @@ if($configExists){
           </td>
           <td class="col-6">
             <input class="col-12 config-text" type="text" id="FOLIO_TENANT" name="FOLIO_TENANT" value="<?php echo htmlentities($FOLIO_TENANT); ?>" size=20>
+          </td>
+        </tr>
+        <tr>
+          <td class="col-6">
+            <label for="OKAPI_URL">Okapi URL</label>
+          </td>
+          <td class="col-6">
+            <input class="col-12 config-text" type="text" id="OKAPI_URL" name="OKAPI_URL" value="<?php echo htmlentities($OKAPI_URL); ?>" size=20>
           </td>
         </tr>
       </table>

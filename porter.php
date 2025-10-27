@@ -13,32 +13,57 @@ if(!is_file("config.json")){
 
 ?>
 
+
 <form method="POST">
   <div class="row">
-    <h2>Lokale einträge</h2>
     <div class="col-4">
       <h2>LAS:eR Export</h2>
-      <input type="submit" name="exportLicense" value="Verträge exportieren">
-      <input type="submit" name="exportSub" value="Lizenzen exportieren">
       <input type="submit" name="exportAll" value="Komplettexport">
+      <br><br>
+      <?php
+        if(isset($_POST['scanForTypes'])){
+          $types = array();
+          $subTypes = array_column(json_decode(laserRequest("subscriptionList", array('q' => 'laserID', 'v' => $config['ORG_GUID'])), true), 'calculatedType');
+
+          $licenseTypes = array_column(json_decode(laserRequest("licenseList", array('q' => 'laserID', 'v' => $config['ORG_GUID'])), true), 'calculatedType');
+
+          $allTypes = array_unique(array_merge($subTypes, $licenseTypes));
+          $allTypes = array_values($allTypes);
+
+          foreach($allTypes as $type){
+            echo "<input type='checkbox' id='$type' name='checkedExport[]' value='$type'>";
+            echo "<label for='$type'>$type</label><br>";
+          }
+          echo '<input type="submit" name="exportChecked" value="Export">';
+        }else{
+          echo '<input type="submit" name="scanForTypes" value="Scan">';
+        }
+      ?>
     </div>
     <div class="col-4">
       <h2>FOLIO Import</h2>
-      <input type="submit" name="importAll" value="Import">
-    </div>
-  </div>
-  <hr>
-  <div class="row">
-    <h2>Konsortiallizenzen und Verträge</h2>
-    <div class="col-4">
-      <h2>LAS:eR Export</h2>
-      <input type="submit" name="exportLicensePart" value="Verträge exportieren">
-      <input type="submit" name="exportSubPart" value="Lizenzen exportieren">
-      <input type="submit" name="exportAllPart" value="Komplettexport">
-    </div>
-    <div class="col-4">
-      <h2>FOLIO Import</h2>
-      <input type="submit" name="importAllPart" value="Import">
+      <?php
+        $licenseTypes = array();
+        $subscriptionTypes = array();
+        if(is_dir($config['SAVE_PATH'] . "/licenseList")){
+          $licenseTypes = scandir($config['SAVE_PATH'] . "/licenseList");
+        }
+        if(is_dir($config['SAVE_PATH'] . "/licenseList")){
+          $subscriptionTypes = scandir($config['SAVE_PATH'] . "/subscriptionList");
+        }
+        $mergedtypes = array_merge($licenseTypes, $subscriptionTypes);
+        $availabletypes = array();
+        foreach(array_unique($mergedtypes) as $dir){
+          if($dir != "." && $dir != ".."){
+            $availabletypes[] = $dir;
+          }
+        }
+        foreach($availabletypes as $type){
+          echo "<input type='checkbox' id='$type' name='checkedImport[]' value='$type'>";
+          echo "<label for='$type'>$type</label><br>";
+        }
+      ?>
+      <input type="submit" name="importChecked" value="Import">
     </div>
   </div>
 </form>
@@ -46,90 +71,51 @@ if(!is_file("config.json")){
 
 <?php
 
-if(isset($_POST['exportSub'])){
-  // Fetch list of local subscription
-  $SAVE_PATH = $config['SAVE_PATH'];
-  retrieveList($SAVE_PATH, "subscriptionList", "Local");
-  print "<hr><div class=\"flex-container\">Lizenzen exportiert.</div>";
-}
-
-if(isset($_POST['exportLicense'])){
-  // Fetch list of local subscriptions
-  $SAVE_PATH = $config['SAVE_PATH'];
-  retrieveList($SAVE_PATH, "licenseList", "Local");
-  print "<hr><div class=\"flex-container\">Verträge exportiert.</div>";
+if(isset($_POST['exportChecked'])){
+  $checked = $_POST['checkedExport'] ?? array();
+  retrieveList($config['SAVE_PATH'], "subscriptionList", $_POST['checkedExport']);
+  retrieveList($config['SAVE_PATH'], "licenseList", $_POST['checkedExport']);
+  print "<hr><div class=\"flex-container\">Datensätze exportiert.</div>";
 }
 
 if(isset($_POST['exportAll'])){
-  $SAVE_PATH = $config['SAVE_PATH'];
-  retrieveList($SAVE_PATH, "licenseList", "Local");
-  retrieveList($SAVE_PATH, "subscriptionList", "Local");
+  $types = array();
+  $subTypes = array_column(json_decode(laserRequest("subscriptionList", array('q' => 'laserID', 'v' => $config['ORG_GUID'])), true), 'calculatedType');
+  $licenseTypes = array_column(json_decode(laserRequest("licenseList", array('q' => 'laserID', 'v' => $config['ORG_GUID'])), true), 'calculatedType');
+
+  $allTypes = array_unique(array_merge($subTypes, $licenseTypes));
+  $allTypes = array_values($allTypes);
+
+  retrieveList($config['SAVE_PATH'], "licenseList", $allTypes);
+  retrieveList($config['SAVE_PATH'], "subscriptionList", $allTypes);
   print "<hr><div class=\"flex-container\">Verträge und Lizenzen exportiert.</div>";
 }
 
-if(isset($_POST['exportSubPart'])){
-  // Fetch list of local subscription
+
+if(isset($_POST['importChecked'])){
   $SAVE_PATH = $config['SAVE_PATH'];
-  retrieveList($SAVE_PATH, "subscriptionList", "Participation");
-  print "<hr><div class=\"flex-container\">Lizenzen exportiert.</div>";
-}
+  $checked = $_POST['checkedImport'] ?? array();
+  $licenses = "$SAVE_PATH/licenseList/";
+  $subscriptions = "$SAVE_PATH/subscriptionList/";
 
-if(isset($_POST['exportLicensePart'])){
-  // Fetch list of local subscriptions
-  $SAVE_PATH = $config['SAVE_PATH'];
-  retrieveList($SAVE_PATH, "licenseList", "Participation");
-  print "<hr><div class=\"flex-container\">Verträge exportiert.</div>";
-}
+  $okapiToken = okapiLogin();
 
-if(isset($_POST['exportAllPart'])){
-  $SAVE_PATH = $config['SAVE_PATH'];
-  retrieveList($SAVE_PATH, "licenseList", "Participation");
-  retrieveList($SAVE_PATH, "subscriptionList", "Participation");
-  print "<hr><div class=\"flex-container\">Verträge und Lizenzen exportiert.</div>";
-}
+  foreach($checked as $importType){
+    if(is_dir("$licenses/$importType")){
+      foreach(scandir("$licenses$importType") as $licenseDir){
+        if(!is_dir("$licenses$importType/$licenseDir")) continue;
+        if(in_array($licenseDir, array(".", ".."))) continue;
+        importResource("license", "$licenses$importType/$licenseDir", $okapiToken);
+      }
+    }
 
-if(isset($_POST['importSub'])){
-  $SAVE_PATH = $config['SAVE_PATH'];
-  $subscriptions = "$SAVE_PATH/subscriptionList";
-
-  foreach(scandir($subscriptions) as $subscriptionDir){
-    if(!is_dir("$subscriptions/$subscriptionDir")) continue;
-    if(in_array($subscriptionDir, array(".", ".."))) continue;
-    importResource("subscription", "$subscriptions/$subscriptionDir");
-  }
-
-  print "<hr><div class=\"flex-container\">Daten importiert.</div>";
-}
-
-if(isset($_POST['importLicense'])){
-  $SAVE_PATH = $config['SAVE_PATH'];
-  $licenses = "$SAVE_PATH/licenseList";
-
-  foreach(scandir($licenses) as $licenseDir){
-    if(!is_dir("$licenses/$licenseDir")) continue;
-    if(in_array($licenseDir, array(".", ".."))) continue;
-    importResource("license", "$licenses/$licenseDir");
-  }
-
-  print "<hr><div class=\"flex-container\">Daten importiert.</div>";
-
-}
-
-if(isset($_POST['importAll'])){
-  $SAVE_PATH = $config['SAVE_PATH'];
-  $licenses = "$SAVE_PATH/licenseList";
-  $subscriptions = "$SAVE_PATH/subscriptionList";
-
-  foreach(scandir($licenses) as $licenseDir){
-    if(!is_dir("$licenses/$licenseDir")) continue;
-    if(in_array($licenseDir, array(".", ".."))) continue;
-    importResource("license", "$licenses/$licenseDir");
-  }
-
-  foreach(scandir($subscriptions) as $subscriptionDir){
-    if(!is_dir("$subscriptions/$subscriptionDir")) continue;
-    if(in_array($subscriptionDir, array(".", ".."))) continue;
-    importResource("subscription", "$subscriptions/$subscriptionDir");
+    if(is_dir("$subscriptions/$importType")){
+      foreach(scandir("$subscriptions$importType") as $subscriptionDir){
+        if(!is_dir("$subscriptions$importType/$subscriptionDir")) continue;
+        if(in_array("$subscriptionDir", array(".", ".."))) continue;
+        importResource("subscription", "$subscriptions$importType/$subscriptionDir", $okapiToken);
+      }
+    }
   }
 
   print "<hr><div class=\"flex-container\">Daten importiert.</div>";

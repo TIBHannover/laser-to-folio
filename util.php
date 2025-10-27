@@ -10,6 +10,7 @@ if(is_file("config.json")){
   $FOLIO_USER = $config['FOLIO_USER'];
   $FOLIO_PASS = $config['FOLIO_PASS'];
   $FOLIO_TENANT = $config['FOLIO_TENANT'];
+  $OKAPI_URL = $config['OKAPI_URL'];
 }
 //LAS:eR API Base-URL
 $API_URL="https://laser.hbz-nrw.de/api/v0/";
@@ -155,9 +156,9 @@ function getJsonData($path, $laserID){
 
 // Log into okAPI to recieve Auth token
 function okapiLogin(){
-  global $FOLIO_PASS, $FOLIO_TENANT, $FOLIO_USER;
+  global $FOLIO_PASS, $FOLIO_TENANT, $FOLIO_USER, $OKAPI_URL;
   writeToLog("import.log", 0, "Logging into okapi..");
-  $curlHandler = curl_init("https://okapi.gbv.de/authn/login-with-expiry");
+  $curlHandler = curl_init("$OKAPI_URL/bl-users/login-with-expiry");
   curl_setopt($curlHandler, CURLOPT_RETURNTRANSFER, true);
   $header = array("x-okapi-tenant: $FOLIO_TENANT", "Content-type: application/json");
   curl_setopt($curlHandler, CURLOPT_HTTPHEADER, $header);
@@ -185,8 +186,9 @@ function okapiLogin(){
 
 // Call FOLIO API to check if $name is already used as agreement name
 function checkAgreementName($name, $okapiToken){
+  global $OKAPI_URL;
   writeToLog("import.log", 0, "Checking if '$name' is already in use.");
-  $curlHandler = curl_init("https://okapi.gbv.de/erm/validate/subscriptionAgreement/name");
+  $curlHandler = curl_init("$OKAPI_URL/erm/validate/subscriptionAgreement/name");
   curl_setopt($curlHandler, CURLOPT_RETURNTRANSFER, true);
   $header = array("Content-type: application/json");
   foreach($okapiToken as $k => $v){
@@ -209,13 +211,14 @@ function checkAgreementName($name, $okapiToken){
 
 // Sends a POST request to okAPI to create a new resource
 function uploadResource($resource, $type, $okapiToken){
+  global $OKAPI_URL;
   writeToLog("import.log", 0, "Uploading $type");
   switch ($type) {
     case 'license':
-      $curlHandler = curl_init("https://okapi.gbv.de/licenses/licenses");
+      $curlHandler = curl_init("$OKAPI_URL/licenses/licenses");
       break;
     case 'subscription':
-      $curlHandler = curl_init("https://okapi.gbv.de/erm/sas");
+      $curlHandler = curl_init("$OKAPI_URL/erm/sas");
       break;
     default:
       writeToLog("import.log", 3, "Unknown type $type.");
@@ -292,6 +295,7 @@ function generateRandomString($length){
 
 // Uploads a document to FOLIO and returns the folioID
 function uploadDocument($path, $filename, $type, $okapiToken){
+  global $OKAPI_URL;
   $documentContentType = array(
     "PDF" => "application/pdf",
     "pdf" => "application/pdf",
@@ -303,10 +307,10 @@ function uploadDocument($path, $filename, $type, $okapiToken){
 
   switch ($type) {
     case 'license':
-      $curlHandler = curl_init("https://okapi.gbv.de/licenses/files");
+      $curlHandler = curl_init("$OKAPI_URL/licenses/files");
       break;
     case 'subscription':
-      $curlHandler = curl_init("https://okapi.gbv.de/erm/files");
+      $curlHandler = curl_init("$OKAPI_URL/erm/files");
       break;
     default:
       writeToLog("import.log", 3, "Unknown document endpoint for '$type'");
@@ -369,39 +373,47 @@ function checkDatabase($db, $key){
 
 
 // Retrieves either the subscriptionList or licenseList of given org and saves result at "$path/<subscriptionList|licenseList>"
-function retrieveList($path, $list, $type){
+function retrieveList($path, $list, $typeList){
   global $ORG_GUID;
-  if(!is_dir("$path/$list/$type")) mkdir("$path/$list/$type", 0777, true);
+
+  if(empty($typeList)){
+    return;
+  }
+
+  foreach($typeList as $type){
+    if(!is_dir("$path/$list/$type")) mkdir("$path/$list/$type", 0777, true);
+  }
 
   // To prevent cancellation of script
   set_time_limit(0);
-  // If local file with lists exists load it, else create and fill it
+
   $resp = laserRequest($list, array('q' => 'laserID', 'v' => $ORG_GUID));
   $resp = json_decode($resp, true);
 
-  // Filter out any non-local resource
+  // Filter out resource by type
   $metaList = array();
-  foreach($resp as $license){
-    if($license['calculatedType'] == $type){
-      $metaList[] = $license;
+  foreach($resp as $resource){
+    if(in_array($resource['calculatedType'], $typeList)){
+      $metaList[] = $resource;
     }
   }
 
   // Create directories for each local resource and save data inside
-  foreach($metaList as $entry){
+  foreach($metaList as $resource){
     // Extract part of laserID after ":" to use as directory name
-    $entryID = $entry['globalUID'] ?? $entry['laserID'];
-    $uid = explode(":", $entryID)[1];
-    $entryDir = "$path/$list/$type/$uid";
-    if(!is_dir($entryDir)) mkdir($entryDir);
+    $resourceID = $resource['globalUID'] ?? $resource['laserID'];
+    $uid = explode(":", $resourceID)[1];
+    $resourceType = $resource['calculatedType'];
+    $resourceDir = "$path/$list/$resourceType/$uid";
+    if(!is_dir($resourceDir)) mkdir($resourceDir);
 
-    $entryJSON = getJsonData("$entryDir/daten.json", $entryID);
+    $resourceJSON = getJsonData("$resourceDir/daten.json", $resourceID);
 
     // Check for documents
-    if(isset($entryJSON['documents'])){
-      foreach($entryJSON['documents'] as $document){
+    if(isset($resourceJSON['documents'])){
+      foreach($resourceJSON['documents'] as $document){
         if(isset($document['type']) and $document['type'] == "Note") continue;
-        downloadDocument("$entryDir/", $document['filename'], $document['laserID']);
+        downloadDocument("$resourceDir/", $document['filename'], $document['laserID']);
       }
     }
   }
@@ -409,9 +421,10 @@ function retrieveList($path, $list, $type){
 
 // Uploads a note and connects it to resource per folioID
 function uploadNote($title, $content, $type, $folioID, $okapiToken){
+  global $OKAPI_URL;
   writeToLog("import.log", 0, "Uploading note '$title' to $folioID");
   if($type == "subscription") $type = "agreement";
-  $curlHandler = curl_init("https://okapi.gbv.de/notes");
+  $curlHandler = curl_init("$OKAPI_URL/notes");
   curl_setopt($curlHandler, CURLOPT_RETURNTRANSFER, true);
   $header = array("Content-type: application/json");
   foreach($okapiToken as $k => $v){
@@ -426,7 +439,7 @@ function uploadNote($title, $content, $type, $folioID, $okapiToken){
   $note['links'] = array(array("type" => $type, "id" => $folioID));
 
   //get ID for first note type found
-  $curlHandlerNoteType = curl_init("https://okapi.gbv.de/note-types");
+  $curlHandlerNoteType = curl_init("$OKAPI_URL/note-types");
   curl_setopt($curlHandlerNoteType, CURLOPT_RETURNTRANSFER, true);
   $header = array();
   foreach($okapiToken as $k => $v){
@@ -446,11 +459,9 @@ function uploadNote($title, $content, $type, $folioID, $okapiToken){
 }
 
 // Uploads a resource to FOLIO
-function importResource($type, $path){
+function importResource($type, $path, $okapiToken){
   global $SAVE_PATH, $status, $resourceMap;
   writeToLog("import.log", 0, "Importing '$type' at '$path'");
-  // Login and load resource
-  $okapiToken = okapiLogin();
 
   # $mysqli = @new mysqli("localhost", $DB_USER, $DB_PASS, $DB_NAME);
   $db = new SQLite3('laserfolio.sqlite', SQLITE3_OPEN_READWRITE);
