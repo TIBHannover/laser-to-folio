@@ -1,0 +1,148 @@
+{
+   "hasPublishComponent": "No",
+   "isMultiYear": "No",
+   "endDate": "2024-12-31T00:00:00",
+   "isAutomaticRenewAnnually": "No",
+   "resource": "ejournalSingle",
+   "isPublicForApi": "Yes",
+   "documents": [
+      {
+         "lastUpdated": "2024-09-09T20:42:37",
+         "title": "angelegt am 9.9.24",
+         "type": "Note"
+      }
+   ],
+   "kind": "Local Subscription",
+   "lastUpdated": "2024-09-09T20:42:17",
+   "laserID": "subscription:22222222-2222-2222-2222-222222222222",
+   "licenses": [{
+      "reference": "Lokaler Demovertrag für LAS:eR to FOLIO",
+      "laserID": "license:11111111-1111-1111-1111-111111111111",
+      "calculatedType": "Local",
+      "startDate": "2022-01-01T00:00:00",
+      "status": "Current"
+   }],
+   "dateCreated": "2024-09-09T20:25:01",
+   "form": "license",
+   "organisations": [{
+      "organisation": {
+         "sortname": "Hannover, TIB",
+         "laserID": "org:2e43b291-22c0-4b4e-9c81-0a3216f00108",
+         "identifiers": [
+            {
+               "namespace": "dbis_org_id",
+               "value": "ubtib"
+            },
+            {
+               "namespace": "DBS-ID",
+               "value": "DK297"
+            },
+            {
+               "namespace": "deal_id",
+               "value": "6387"
+            },
+            {
+               "namespace": "ezb_org_id",
+               "value": "UBTIB"
+            },
+            {
+               "namespace": "gnd_org_nr",
+               "value": "1080328793"
+            },
+            {
+               "namespace": "ISIL",
+               "value": "DE-89"
+            },
+            {
+               "namespace": "leibniz",
+               "value": "TIB"
+            },
+            {"namespace": "Leitkriterium (intern)"},
+            {"namespace": "Leitweg-ID"},
+            {
+               "namespace": "ROR ID",
+               "value": "0304hq317"
+            },
+            {
+               "namespace": "ROR ID",
+               "value": "04aj4c181"
+            },
+            {
+               "namespace": "VAT",
+               "value": "DE214931803"
+            },
+            {
+               "namespace": "wibid",
+               "value": "WIB6065"
+            }
+         ],
+         "name": "Technische Informationsbibliothek (TIB)",
+         "type": ["Institution"],
+         "status": "Current"
+      },
+      "roleType": "Subscriber"
+   }],
+   "name": "Lokale Demolizenz für LAS:eR to FOLIO",
+   "hasPerpetualAccess": "Yes",
+   "calculatedType": "Local",
+   "orgAccessPoints": [],
+   "vendors": [{
+      "sortname": "EBSCO",
+      "laserID": "vendor:e8f3f4ed-4fbf-4fbf-9fdc-eeea0da4672f",
+      "name": "EBSCO Information Services GmbH",
+      "gokbId": "e60c967b-b1d5-41ca-a0ab-8193682fc755",
+      "status": "Current"
+   }],
+   "startDate": "2022-01-01T00:00:00",
+   "properties": [
+      {
+         "scope": "Subscription Property",
+         "isPublic": "Yes",
+         "type": "Text",
+         "value": "Preissteigerung über 20 %",
+         "token": "Cancellation reason"
+      },
+      {
+         "scope": "Subscription Property",
+         "isPublic": "Yes",
+         "type": "Text",
+         "value": "123456789",
+         "token": "Interne Bezeichnung"
+      },
+      {
+         "note": "Notiz aus LAS:eR",
+         "refdataCategory": "y.n",
+         "scope": "Subscription Property",
+         "isPublic": "Yes",
+         "type": "Refdata",
+         "value": "Yes",
+         "token": "Zusatzrecht"
+      }
+   ],
+   "providers": [{
+      "sortname": "EBSCO",
+      "laserID": "provider:a1f7c0ee-90fe-42c2-b677-be74d29410fb",
+      "identifiers": [
+         {
+            "namespace": "dbpedia",
+            "value": "http://dbpedia.org/resource/EBSCO"
+         },
+         {
+            "namespace": "viaf",
+            "value": "http://viaf.org/viaf/159527048"
+         },
+         {
+            "namespace": "isni",
+            "value": "http://isni-url.oclc.nl/isni/0000000110934665"
+         },
+         {
+            "namespace": "loc id",
+            "value": "http://id.loc.gov/authorities/names/n86023339"
+         }
+      ],
+      "name": "EBSCO Publishing, Inc.",
+      "gokbId": "4a129537-3f60-461d-9d66-7039f906a1c9",
+      "status": "Current"
+   }],
+   "status": "Current"
+}

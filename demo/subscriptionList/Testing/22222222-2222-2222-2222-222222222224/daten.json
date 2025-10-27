@@ -1,17 +1,29 @@
 {
+   "hasPublishComponent": "No",
+   "isMultiYear": "No",
+   "endDate": "2024-12-31T00:00:00",
+   "isAutomaticRenewAnnually": "No",
+   "resource": "ejournalSingle",
    "isPublicForApi": "Yes",
    "documents": [
       {
-         "lastUpdated": "2024-09-10T07:39:50",
+         "lastUpdated": "2024-09-09T20:42:37",
          "title": "angelegt am 9.9.24",
          "type": "Note"
       }
    ],
-   "openEnded": "Unknown",
-   "reference": "Testvertrag für LAS:eR 4.0 Update - laserID",
-   "lastUpdated": "2024-09-10T08:36:17",
-   "laserID": "license:11111111-1111-1111-1111-111111111111",
-   "dateCreated": "2024-09-10T07:38:43",
+   "kind": "Test Subscription",
+   "lastUpdated": "2024-09-09T20:42:17",
+   "laserID": "subscription:22222222-2222-2222-2222-222222222224",
+   "licenses": [{
+      "reference": "Test Demovertrag für LAS:eR to FOLIO",
+      "laserID": "license:11111111-1111-1111-1111-111111111113",
+      "calculatedType": "Testing",
+      "startDate": "2022-01-01T00:00:00",
+      "status": "Current"
+   }],
+   "dateCreated": "2024-09-09T20:25:01",
+   "form": "license",
    "organisations": [{
       "organisation": {
          "sortname": "Hannover, TIB",
@@ -68,37 +80,43 @@
          "type": ["Institution"],
          "status": "Current"
       },
-      "roleType": "Licensee"
+      "roleType": "Subscriber"
    }],
-   "licenseCategory": "Contract",
-   "calculatedType": "Local",
+   "name": "Test Demolizenz für LAS:eR to FOLIO",
+   "hasPerpetualAccess": "Yes",
+   "calculatedType": "Testing",
+   "orgAccessPoints": [],
+   "vendors": [{
+      "sortname": "EBSCO",
+      "laserID": "vendor:e8f3f4ed-4fbf-4fbf-9fdc-eeea0da4672f",
+      "name": "EBSCO Information Services GmbH",
+      "gokbId": "e60c967b-b1d5-41ca-a0ab-8193682fc755",
+      "status": "Current"
+   }],
    "startDate": "2022-01-01T00:00:00",
    "properties": [
       {
-         "paragraph": "Auszug aus dem Vertrag",
-         "scope": "License Property",
+         "scope": "Subscription Property",
          "isPublic": "Yes",
          "type": "Text",
-         "value": "30 Tage vor Ende der Lizenzperiode",
-         "token": "Texteigenschaft"
+         "value": "Preissteigerung über 20 %",
+         "token": "Cancellation reason"
       },
       {
-         "paragraph": "Auszug aus dem Vertrag",
-         "refdataCategory": "y.n.o",
-         "scope": "License Property",
+         "scope": "Subscription Property",
          "isPublic": "Yes",
-         "type": "Refdata",
-         "value": "No",
-         "token": "Veraltete Eigenschaft"
+         "type": "Text",
+         "value": "123456789",
+         "token": "Interne Bezeichnung"
       },
       {
-         "paragraph": "Auszug aus dem Vertrag",
-         "refdataCategory": "y.n.o",
-         "scope": "License Property",
+         "note": "Notiz aus LAS:eR",
+         "refdataCategory": "y.n",
+         "scope": "Subscription Property",
          "isPublic": "Yes",
          "type": "Refdata",
          "value": "Yes",
-         "token": "Auswahllisten Eigenschaft"
+         "token": "Zusatzrecht"
       }
    ],
    "providers": [{
