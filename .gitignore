@@ -1,5 +1,9 @@
 *.json
 *.log
 *.sqlite
-!demo/subscriptionList/22222222-2222-2222-2222-222222222222/daten.json
-!demo/licenseList/11111111-1111-1111-1111-111111111111/daten.json
+!demo/subscriptionList/Local/22222222-2222-2222-2222-222222222222/daten.json
+!demo/subscriptionList/Participation/22222222-2222-2222-2222-222222222223/daten.json
+!demo/subscriptionList/Testing/22222222-2222-2222-2222-222222222224/daten.json
+!demo/licenseList/Testing/11111111-1111-1111-1111-111111111111/daten.json
+!demo/licenseList/Participation/11111111-1111-1111-1111-111111111112/daten.json
+!demo/licenseList/Local/11111111-1111-1111-1111-111111111113/daten.json
