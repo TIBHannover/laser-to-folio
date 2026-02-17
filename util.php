@@ -626,7 +626,8 @@ function importResource($type, $path, $okapiToken){
         // Concatenate note and paragraph to one text, FOLIO limitation
         $note = $property['note'] ?? "";
         $paragraph = $property['paragraph'] ?? "";
-        $result['note'] = "$note::$paragraph";
+        $combined = "$note::$paragraph";
+        $result['note'] = ($combined !== "::") ? $combined : "";
         $data['customProperties'][$map['folioName']] = $result;
       }
     }
