@@ -619,10 +619,15 @@ function importResource($type, $path, $okapiToken){
           default:
             continue 2;
         }
+        // Skip if value is null (FOLIO does not accept null values)
+      	if($result['value'] === null){
+            continue;
+      	}
         // Concatenate note and paragraph to one text, FOLIO limitation
         $note = $property['note'] ?? "";
         $paragraph = $property['paragraph'] ?? "";
-        $result['note'] = "$note::$paragraph";
+        $combined = "$note::$paragraph";
+        $result['note'] = ($combined !== "::") ? $combined : "";
         $data['customProperties'][$map['folioName']] = $result;
       }
     }
