@@ -492,10 +492,11 @@ function importResource($type, $path, $okapiToken){
 
   if($type == "subscription"){
     // Special handling for subscriptions
-    if(isset($resource['resource'])){
-      $data['agreementContentTypes'] = array(array("contentType" => array("value" => $resourceMap[$resource['resource']])));
+    $contentTypeValue = $resourceMap[$resource['resource']] ?? null;
+    if($contentTypeValue !== null && $contentTypeValue !== ""){
+      $data['agreementContentTypes'] = array(array("contentType" => array("value" => $contentTypeValue)));
     }
-    $data['agreementStatus'] = $status[$resource['status']]; 
+    $data['agreementStatus'] = $status[$resource['status']];
 
     // Set time period
     $data['periods'] = array(array("startDate" => $startDate, "endDate" => $endDate));
