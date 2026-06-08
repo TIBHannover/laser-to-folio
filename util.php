@@ -492,10 +492,11 @@ function importResource($type, $path, $okapiToken){
 
   if($type == "subscription"){
     // Special handling for subscriptions
-    if(isset($resource['resource'])){
-      $data['agreementContentTypes'] = array(array("contentType" => array("value" => $resourceMap[$resource['resource']])));
+    $contentTypeValue = $resourceMap[$resource['resource']] ?? null;
+    if($contentTypeValue !== null && $contentTypeValue !== ""){
+      $data['agreementContentTypes'] = array(array("contentType" => array("value" => $contentTypeValue)));
     }
-    $data['agreementStatus'] = $status[$resource['status']]; 
+    $data['agreementStatus'] = $status[$resource['status']];
 
     // Set time period
     $data['periods'] = array(array("startDate" => $startDate, "endDate" => $endDate));
@@ -619,10 +620,15 @@ function importResource($type, $path, $okapiToken){
           default:
             continue 2;
         }
+        // Skip if value is null (FOLIO does not accept null values)
+      	if($result['value'] === null){
+            continue;
+      	}
         // Concatenate note and paragraph to one text, FOLIO limitation
         $note = $property['note'] ?? "";
         $paragraph = $property['paragraph'] ?? "";
-        $result['note'] = "$note::$paragraph";
+        $combined = "$note::$paragraph";
+        $result['note'] = ($combined !== "::") ? $combined : "";
         $data['customProperties'][$map['folioName']] = $result;
       }
     }
