@@ -15,6 +15,9 @@ $db->close();
 
 if(isset($_POST['save'])){
   // Save configuration to file
+  foreach($_POST as $key => $value){
+    $_POST[$key] = trim($value);
+  }
   $config = $_POST;
   unset($config['save']);
   if(isset($config['OKAPI_URL'])){
