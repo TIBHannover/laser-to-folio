@@ -486,7 +486,7 @@ function importResource($type, $path, $okapiToken){
   $date = new DateTimeImmutable($startDate);
   $startYear = $date->format('Y');
   $endDate = $resource['endDate'] ?? "";
-  $data['name'] = $type == "license" ? $resource['reference'] . " $startYear" : $resource['name'] . " $startYear";
+  $data['name'] = $resource['name'] . " $startYear";
   $data['startDate'] = $startDate;
   $data['endDate'] = $endDate;
 
